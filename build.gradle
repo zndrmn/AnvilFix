@@ -1,15 +1,10 @@
-import com.modrinth.minotaur.TaskModrinthUpload
-
 import java.nio.charset.StandardCharsets
 import java.time.Year
 
 plugins {
     id "java-library"
-    id "maven-publish"
     id "fabric-loom" version "0.11.+"
     id "org.cadixdev.licenser" version "0.6.1"
-    id "com.modrinth.minotaur" version "1.1.0"
-    id "com.matthewprenger.cursegradle" version "1.4.0"
 }
 
 def ENV = System.getenv()
@@ -80,26 +75,6 @@ jar {
     from "LICENSE.md"
 }
 
-publishing {
-    publications {
-        mavenJava(MavenPublication) {
-            from components.java
-        }
-    }
-
-    repositories {
-        if(ENV.MAVEN_URL && ENV.MAVEN_USER && ENV.MAVEN_PASS) {
-            maven {
-                url = ENV.MAVEN_URL
-                credentials {
-                    username = ENV.MAVEN_USER
-                    password = ENV.MAVEN_PASS
-                }
-            }
-        }
-    }
-}
-
 license {
     header = project.file("code_quality/MIT_HEADER.txt")
     include "**/*.java"
@@ -116,51 +91,4 @@ license {
         year = Year.now()
         projectDisplayName = project.archivesBaseName
     }
-}
-
-curseforge {
-    apiKey = ENV.CURSEFORGE_TOKEN ?: "invalid"
-    project {
-        id = project.curseforge_id
-        releaseType = isPreviewBuild ? ((ENV.TAG && ENV.TAG.contains("-beta")) ? "beta" : "alpha") : "release"
-        "${project.curseforge_game_versions}".split(",").each {
-            addGameVersion(it)
-        }
-        addGameVersion("Fabric") // set ModLoader to Fabric
-        addGameVersion("Java ${javaVersion}")
-
-        mainArtifact(remapJar) {
-            displayName = "${archivesBaseName} ${ENV.TAG ?: version}"
-            relations {
-                requiredDependency 'fabric-api'
-                embeddedLibrary 'cloth-config'
-            }
-        }
-    }
-
-    options {
-        forgeGradleIntegration = false
-    }
-}
-
-task publishToModrinth(type: TaskModrinthUpload, dependsOn: assemble) {
-    if (ENV.MODRINTH_TOKEN) {
-        token = ENV.MODRINTH_TOKEN
-    }
-    projectId = project.modrinth_id
-    uploadFile = remapJar
-    versionNumber = ENV.TAG ?: version
-    versionName = versionNumber // need this here because the Modrinth API doesn't do that by default
-    releaseType = isPreviewBuild ? ((ENV.TAG && ENV.TAG.contains("-beta")) ? "beta" : "alpha") : "release"
-    "${project.modrinth_game_versions}".split(",").each {
-        addGameVersion(it)
-    }
-    addLoader("fabric")
-}
-
-if (ENV.MODRINTH_TOKEN) {
-    tasks.publish.dependsOn(publishToModrinth)
-}
-if (ENV.CURSEFORGE_TOKEN) {
-    tasks.publish.dependsOn(tasks.curseforge)
 }
