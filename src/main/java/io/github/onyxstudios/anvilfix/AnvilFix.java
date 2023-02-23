@@ -36,7 +36,7 @@ public class AnvilFix implements ModInitializer {
 
     public static final String MODID = "anvil_fix";
 
-    public static final TagKey<Item> FORCE_REPAIR_COST_TAG = TagKey.of(RegistryKeys.ITEM, new Identifier("tutorial", "example_ores"));
+    public static final TagKey<Item> FORCE_REPAIR_COST_TAG = TagKey.of(RegistryKeys.ITEM, new Identifier(MODID, "force_incremental_repair_cost"));
 
     public static AnvilfixConfig getConfig() {
         return AutoConfig.getConfigHolder(AnvilfixConfig.class).getConfig();
